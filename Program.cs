@@ -2,8 +2,15 @@
 
 using Buttplug.Client;
 using System.Diagnostics;
+using System;
+using System.Runtime.InteropServices;
+using OsuMemoryDataProvider;
+using OsuMemoryDataProvider.OsuMemoryModels;
+using OsuMemoryDataProvider.OsuMemoryModels.Abstract;
+using OsuMemoryDataProvider.OsuMemoryModels.Direct;
+using ProcessMemoryDataFinder;
 
-namespace buttPlugThing;
+namespace osuPlug;
 
 
 internal class Program {
@@ -14,23 +21,32 @@ internal class Program {
         }
         Console.ReadKey(true);
     }
+   private readonly StructuredOsuMemoryReader osuReader = new (new ProcessTargetOptions("osu!"));
+    private T ReadProperty<T>(object readObj, string propName, T defaultValue = default) where T : struct
+    {
+        if (osuReader.TryReadProperty(readObj, propName, out var readResult))
+            return (T)readResult;
+
+        return defaultValue;
+    }
+
+    private T ReadClassProperty<T>(object readObj, string propName, T defaultValue = default) where T : class
+    {
+        if (osuReader.TryReadProperty(readObj, propName, out var readResult))
+            return (T)readResult;
+
+        return defaultValue;
+    }
+
+    private int ReadInt(object readObj, string propName)
+        => ReadProperty<int>(readObj, propName, -5);
+    //public class playerMiss {
+      //  [MemoryAddress("+0x92")] public ushort HitMiss { get; set; }
+    //}
 
     private static async Task osuPlug() {
-        // Now that we've seen all of the different parts of Buttplug, let's
-        // put them together in a small program.
-        //
-        // This program will:
-        // - Create an websocket connector
-        // - Scan, this time using real Managers, so we'll see devices
-        //   (assuming you have them hooked up)
-        // - List the connected devices for the user
-        // - Let the user select a device, and trigger some sort of event on
-        //   that device (vibration, thrusting, etc...).
-
-        // As usual, we start off with our connector setup. We really don't
-        // need access to the connector this time, so we can just pass the
-        // created connector directly to the client.
         var client = new ButtplugClient("osu!plug");
+
 
         // Whenever a client connects, it asks the server for a list of devices
         // that may already be connected. Therefore we'll want to set up our
@@ -52,11 +68,6 @@ internal class Program {
         await client.ConnectAsync(new ButtplugWebsocketConnector(new Uri("ws://127.0.0.1:12345")));
 
 
-        // The structure here is gonna get a little weird now, because I'm
-        // using method scoped functions. We'll be defining our scanning
-        // function first, then running it just to find any devices up front.
-        // Then we'll define our command sender. Finally, with all of that
-        // done, we'll end up in our main menu
 
         // Here's the scanning part. Pretty simple, just scan until the user
         // hits a button. Any time a new device is found, print it so the
@@ -107,10 +118,35 @@ internal class Program {
 
             var device = client.Devices.First(dev => dev.Index == deviceChoice);
 
-
-            Process[] processList = Process.GetProcessesByName("osu!");
+            var bytes = 0;
+            var processList = Process.GetProcessesByName("osu!");
+            Console.WriteLine(processList[0]);
+            StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
             if (processList.Length > 0) {
+                var baseAddresses = new OsuBaseAddresses();
+                Program prog = new Program();
+                prog.ReadInt(baseAddresses.Player.HitMiss, nameof(PlayerScore));
+                /*
+                [DllImport("kernel32.dll")]
+                static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+                [DllImport("kernel32.dll")]
+                static extern bool ReadProcessMemory(int hProcess, long lpBaseAddress, byte[] lpBuffer, int dwSize, ref int lpNumberOfBytesRead);
+                */
+                Console.WriteLine(processList[0].Id);
+
+                var buffer = new byte[32];
+               // var handle = OpenProcess(0x10,false,processList[0].Id);
+                //var test = ReadProcessMemory((int)handle, 0xf801748365+0x92,buffer,2,ref bytes);
+                //var test2 = BitConverter.ToInt32(buffer);
+               // StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
+                //StructuredOsuMemoryReader.TryRead(baseAddresses.Player);
+                var hitMiss = baseAddresses.Player.HitMiss;
+                Console.WriteLine(hitMiss);
+
+
+                //Console.WriteLine(test2);
                 Console.WriteLine("good girl");
+
                 try {
                     await device.VibrateAsync(0.5);
                     await Task.Delay(1000);
@@ -132,7 +168,7 @@ internal class Program {
                     Console.WriteLine($"Problem vibrating: {e}");
                 }
             }
-        }
+}
 
         await ControlDevice();
     }

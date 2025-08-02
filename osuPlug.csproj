@@ -9,6 +9,8 @@
 
     <ItemGroup>
       <PackageReference Include="Buttplug" Version="4.0.0" />
+      <PackageReference Include="OsuMemoryDataProvider" Version="0.11.1" />
+      <PackageReference Include="ProcessMemoryDataFinder" Version="0.9.0" />
     </ItemGroup>
 
 </Project>

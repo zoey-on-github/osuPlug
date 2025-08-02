@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "buttPlugThing", "buttPlugThing.csproj", "{D4219781-69A1-498F-B18E-B856CFE118E1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "osuPlug", "osuPlug.csproj", "{D4219781-69A1-498F-B18E-B856CFE118E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
