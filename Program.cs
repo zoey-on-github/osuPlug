@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using Buttplug.Client;
+using Newtonsoft.Json;
 using System.Diagnostics;
 using System;
 using System.Runtime.InteropServices;
@@ -9,6 +10,7 @@ using OsuMemoryDataProvider.OsuMemoryModels;
 using OsuMemoryDataProvider.OsuMemoryModels.Abstract;
 using OsuMemoryDataProvider.OsuMemoryModels.Direct;
 using ProcessMemoryDataFinder;
+using System.Text.Json.Serialization;
 
 namespace osuPlug;
 
@@ -40,9 +42,6 @@ internal class Program {
 
     private int ReadInt(object readObj, string propName)
         => ReadProperty<int>(readObj, propName, -5);
-    //public class playerMiss {
-      //  [MemoryAddress("+0x92")] public ushort HitMiss { get; set; }
-    //}
 
     private static async Task osuPlug() {
         var client = new ButtplugClient("osu!plug");
@@ -118,30 +117,26 @@ internal class Program {
 
             var device = client.Devices.First(dev => dev.Index == deviceChoice);
 
-            var bytes = 0;
+            //var bytes = 0;
             var processList = Process.GetProcessesByName("osu!");
-            Console.WriteLine(processList[0]);
+            //Console.WriteLine(processList[0]);
             StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
             if (processList.Length > 0) {
                 var baseAddresses = new OsuBaseAddresses();
-                Program prog = new Program();
-                prog.ReadInt(baseAddresses.Player.HitMiss, nameof(PlayerScore));
-                /*
-                [DllImport("kernel32.dll")]
-                static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
-                [DllImport("kernel32.dll")]
-                static extern bool ReadProcessMemory(int hProcess, long lpBaseAddress, byte[] lpBuffer, int dwSize, ref int lpNumberOfBytesRead);
-                */
+                Program prog = new Program(); 
+                prog.osuReader.TryRead(baseAddresses);
+                prog.osuReader.TryRead(baseAddresses.Beatmap);
+                prog.osuReader.TryRead(baseAddresses.Skin);
+                prog.osuReader.TryRead(baseAddresses.GeneralData);
+                prog.osuReader.TryRead(baseAddresses.BanchoUser);
+                prog.osuReader.TryRead(baseAddresses.Player);
+                var misscount = baseAddresses.Player.HitMiss;
+                Console.WriteLine(misscount);
+             //   Console.WriteLine(JsonConvert.SerializeObject(baseAddresses));
                 Console.WriteLine(processList[0].Id);
 
-                var buffer = new byte[32];
-               // var handle = OpenProcess(0x10,false,processList[0].Id);
-                //var test = ReadProcessMemory((int)handle, 0xf801748365+0x92,buffer,2,ref bytes);
-                //var test2 = BitConverter.ToInt32(buffer);
                // StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
                 //StructuredOsuMemoryReader.TryRead(baseAddresses.Player);
-                var hitMiss = baseAddresses.Player.HitMiss;
-                Console.WriteLine(hitMiss);
 
 
                 //Console.WriteLine(test2);
