@@ -111,10 +111,14 @@ internal class Program {
 
 
             while (true) {
+                //i didn't want to put this sleep call here, so that a bunch of misses in quick succession could result in a bunch of vibrations
+                // but if i didn't put it here, the misscount would go to 0 like i was being ratelimited or something
+                Thread.Sleep(50);
                 var processList = Process.GetProcessesByName("osu!");
                 //Console.WriteLine(processList[0]);
                 StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
                 if (processList.Length > 0) {
+                    //Console.WriteLine("osu's open. good girl :3");
                     var baseAddresses = new OsuBaseAddresses();
                     Program prog = new Program();
                     prog.osuReader.TryRead(baseAddresses);
@@ -124,37 +128,43 @@ internal class Program {
                     prog.osuReader.TryRead(baseAddresses.BanchoUser);
                     prog.osuReader.TryRead(baseAddresses.Player);
                     var misscount = baseAddresses.Player.HitMiss;
+                    ushort previousMisscount = 0;
                     Console.WriteLine(misscount);
+                    Console.WriteLine(previousMisscount);
 
 
-                    Console.WriteLine("good girl");
-
-                    try {
-                        await device.VibrateAsync(0.5);
-                        await Task.Delay(1000);
-                        await device.VibrateAsync(0);
+                    if (previousMisscount < misscount) {
+                        try {
+                            await device.VibrateAsync(0.5);
+                            await Task.Delay(1000);
+                            await device.VibrateAsync(0);
+                        }
+                        catch (Exception e) {
+                            Console.WriteLine($"Problem vibrating: {e}");
+                        }
+                        misscount = previousMisscount;
                     }
-                    catch (Exception e) {
-                        Console.WriteLine($"Problem vibrating: {e}");
-                    }
-                }
+                    Console.WriteLine(misscount);
+                    Console.WriteLine(previousMisscount);
+                } 
                 else {
-                    try {
-                        Console.WriteLine("osu is not open. bad girl");
-                        await device.VibrateAsync(0.5);
-                        await Task.Delay(5000);
-                        await device.VibrateAsync(0);
-                        Console.WriteLine("i hope this taught you a lesson >:3");
-                    }
-                    catch (Exception e) {
-                        Console.WriteLine($"Problem vibrating: {e}");
-                    }
+                        try {
+                            Console.WriteLine("osu is not open. bad girl");
+                            await device.VibrateAsync(0.5);
+                            await Task.Delay(5000);
+                            await device.VibrateAsync(0);
+                            Console.WriteLine("i hope this taught you a lesson >:3");
+                        }
+                        catch (Exception e) {
+                            Console.WriteLine($"Problem vibrating: {e}");
+                        }
                 }
             }
 
         }
+
         await ControlDevice();
-    }
+        }
     private static void Main() {
         // Setup a client, and wait until everything is done before exiting.
         osuPlug().Wait();
