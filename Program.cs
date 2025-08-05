@@ -18,22 +18,6 @@ internal class Program {
         Console.ReadKey(true);
     }
     private readonly StructuredOsuMemoryReader osuReader = new(new ProcessTargetOptions("osu!"));
-    private T ReadProperty<T>(object readObj, string propName, T defaultValue = default) where T : struct {
-        if (osuReader.TryReadProperty(readObj, propName, out var readResult))
-            return (T)readResult;
-
-        return defaultValue;
-    }
-
-    private T ReadClassProperty<T>(object readObj, string propName, T defaultValue = default) where T : class {
-        if (osuReader.TryReadProperty(readObj, propName, out var readResult))
-            return (T)readResult;
-
-        return defaultValue;
-    }
-
-    private int ReadInt(object readObj, string propName)
-        => ReadProperty<int>(readObj, propName, -5);
 
     private static async Task osuPlug() {
         var client = new ButtplugClient("osu!plug");
