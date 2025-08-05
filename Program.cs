@@ -1,16 +1,10 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using Buttplug.Client;
-using Newtonsoft.Json;
 using System.Diagnostics;
-using System;
-using System.Runtime.InteropServices;
 using OsuMemoryDataProvider;
 using OsuMemoryDataProvider.OsuMemoryModels;
-using OsuMemoryDataProvider.OsuMemoryModels.Abstract;
-using OsuMemoryDataProvider.OsuMemoryModels.Direct;
 using ProcessMemoryDataFinder;
-using System.Text.Json.Serialization;
 
 namespace osuPlug;
 
@@ -23,17 +17,15 @@ internal class Program {
         }
         Console.ReadKey(true);
     }
-   private readonly StructuredOsuMemoryReader osuReader = new (new ProcessTargetOptions("osu!"));
-    private T ReadProperty<T>(object readObj, string propName, T defaultValue = default) where T : struct
-    {
+    private readonly StructuredOsuMemoryReader osuReader = new(new ProcessTargetOptions("osu!"));
+    private T ReadProperty<T>(object readObj, string propName, T defaultValue = default) where T : struct {
         if (osuReader.TryReadProperty(readObj, propName, out var readResult))
             return (T)readResult;
 
         return defaultValue;
     }
 
-    private T ReadClassProperty<T>(object readObj, string propName, T defaultValue = default) where T : class
-    {
+    private T ReadClassProperty<T>(object readObj, string propName, T defaultValue = default) where T : class {
         if (osuReader.TryReadProperty(readObj, propName, out var readResult))
             return (T)readResult;
 
@@ -117,62 +109,52 @@ internal class Program {
 
             var device = client.Devices.First(dev => dev.Index == deviceChoice);
 
-            //var bytes = 0;
-            var processList = Process.GetProcessesByName("osu!");
-            //Console.WriteLine(processList[0]);
-            StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
-            if (processList.Length > 0) {
-                var baseAddresses = new OsuBaseAddresses();
-                Program prog = new Program(); 
-                prog.osuReader.TryRead(baseAddresses);
-                prog.osuReader.TryRead(baseAddresses.Beatmap);
-                prog.osuReader.TryRead(baseAddresses.Skin);
-                prog.osuReader.TryRead(baseAddresses.GeneralData);
-                prog.osuReader.TryRead(baseAddresses.BanchoUser);
-                prog.osuReader.TryRead(baseAddresses.Player);
-                var misscount = baseAddresses.Player.HitMiss;
-                Console.WriteLine(misscount);
-             //   Console.WriteLine(JsonConvert.SerializeObject(baseAddresses));
-                Console.WriteLine(processList[0].Id);
 
-               // StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
-                //StructuredOsuMemoryReader.TryRead(baseAddresses.Player);
+            while (true) {
+                var processList = Process.GetProcessesByName("osu!");
+                //Console.WriteLine(processList[0]);
+                StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
+                if (processList.Length > 0) {
+                    var baseAddresses = new OsuBaseAddresses();
+                    Program prog = new Program();
+                    prog.osuReader.TryRead(baseAddresses);
+                    prog.osuReader.TryRead(baseAddresses.Beatmap);
+                    prog.osuReader.TryRead(baseAddresses.Skin);
+                    prog.osuReader.TryRead(baseAddresses.GeneralData);
+                    prog.osuReader.TryRead(baseAddresses.BanchoUser);
+                    prog.osuReader.TryRead(baseAddresses.Player);
+                    var misscount = baseAddresses.Player.HitMiss;
+                    Console.WriteLine(misscount);
 
 
-                //Console.WriteLine(test2);
-                Console.WriteLine("good girl");
+                    Console.WriteLine("good girl");
 
-                try {
-                    await device.VibrateAsync(0.5);
-                    await Task.Delay(1000);
-                    await device.VibrateAsync(0);
+                    try {
+                        await device.VibrateAsync(0.5);
+                        await Task.Delay(1000);
+                        await device.VibrateAsync(0);
+                    }
+                    catch (Exception e) {
+                        Console.WriteLine($"Problem vibrating: {e}");
+                    }
                 }
-                catch (Exception e) {
-                    Console.WriteLine($"Problem vibrating: {e}");
-                }
-            }
-            else {
-                try {
-                    Console.WriteLine("osu is not open. bad girl");
-                    await device.VibrateAsync(0.5);
-                    await Task.Delay(5000);
-                    await device.VibrateAsync(0);
-                    Console.WriteLine("i hope this taught you a lesson >:3");
-                }
-                catch (Exception e) {
-                    Console.WriteLine($"Problem vibrating: {e}");
+                else {
+                    try {
+                        Console.WriteLine("osu is not open. bad girl");
+                        await device.VibrateAsync(0.5);
+                        await Task.Delay(5000);
+                        await device.VibrateAsync(0);
+                        Console.WriteLine("i hope this taught you a lesson >:3");
+                    }
+                    catch (Exception e) {
+                        Console.WriteLine($"Problem vibrating: {e}");
+                    }
                 }
             }
-}
 
+        }
         await ControlDevice();
     }
-
-
-
-
-
-
     private static void Main() {
         // Setup a client, and wait until everything is done before exiting.
         osuPlug().Wait();
