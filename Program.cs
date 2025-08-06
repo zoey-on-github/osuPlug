@@ -102,6 +102,8 @@ internal class Program {
                 //Console.WriteLine(processList[0]);
                 StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
                 if (processList.Length > 0) {
+                    //i really wanted to keep this in, but this would just keep printing forever because it's inside the while loop
+                    //*might* move it outside so i can still have it print to console
                     //Console.WriteLine("osu's open. good girl :3");
                     var baseAddresses = new OsuBaseAddresses();
                     Program prog = new Program();
@@ -138,6 +140,8 @@ internal class Program {
                             await Task.Delay(5000);
                             await device.VibrateAsync(0);
                             Console.WriteLine("i hope this taught you a lesson >:3");
+                            //return so we dont vibrate forever
+                            return;
                         }
                         catch (Exception e) {
                             Console.WriteLine($"Problem vibrating: {e}");
