@@ -57,9 +57,6 @@ internal class Program {
             await client.StopScanningAsync();
         }
 
-        // Scan for devices before we get to the main menu.
-        await ScanForDevices();
-
         // Now we define the device control menus. After we've scanned for
         // devices, the user can use this menu to select a device, then
         // select an action for that device to take.
@@ -73,23 +70,44 @@ internal class Program {
             // (which is why we can't just use an array index).
 
             // Of course, if we don't have any devices yet, that's not gonna work.
-            if (!client.Devices.Any()) {
-                Console.WriteLine("No devices available. Please scan for a device.");
-                return;
+            while (true)
+            {
+                if (!client.Devices.Any())
+                {
+                    // Scan for devices before we get to the main menu.
+                    await ScanForDevices();
+                    Console.WriteLine("No devices available. Please scan for a device.");
+                }
+                else
+                {
+                    break;
+                }
             }
 
             var options = new List<uint>();
-
             foreach (var dev in client.Devices) {
                 Console.WriteLine($"{dev.Index}. {dev.Name}");
                 options.Add(dev.Index);
             }
+
             Console.WriteLine("Choose a device: ");
-            if (!uint.TryParse(Console.ReadLine(), out var deviceChoice) ||
-                !options.Contains(deviceChoice)) {
-                Console.WriteLine("Invalid choice");
-                return;
+            uint deviceChoice;
+            while (true)
+            {
+                var userinput = Console.ReadLine();
+                var validchoice = uint.TryParse(userinput, out deviceChoice);
+                if (!validchoice || !options.Contains(deviceChoice))
+                {
+                    Console.WriteLine("Invalid choice, Try again:");
+                }
+                else
+                {
+                    var selectedDevice = client.Devices.First(d => d.Index == deviceChoice);
+                    Console.WriteLine($"Device {selectedDevice.Name} selected");
+                    break;
+                }
             }
+
 
             var device = client.Devices.First(dev => dev.Index == deviceChoice);
 
