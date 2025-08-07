@@ -130,7 +130,7 @@ internal class Program {
                     prog.osuReader.TryRead(baseAddresses.Skin);
                     prog.osuReader.TryRead(baseAddresses.GeneralData);
                     prog.osuReader.TryRead(baseAddresses.BanchoUser);
-                    while (baseAddresses.GeneralData.OsuStatus == OsuMemoryStatus.Playing) {
+                    if (baseAddresses.GeneralData.OsuStatus == OsuMemoryStatus.Playing) {
                         prog.osuReader.TryRead(baseAddresses.Player);
                         var misscount = baseAddresses.Player.HitMiss;
                         ushort previousMisscount = 0;
@@ -146,7 +146,6 @@ internal class Program {
                                 Console.WriteLine($"Problem vibrating: {e}");
                             }
                             misscount = previousMisscount;
-                            break;
                         }
                         Console.WriteLine(misscount);
                         Console.WriteLine(previousMisscount);
