@@ -111,18 +111,17 @@ internal class Program {
 
             var device = client.Devices.First(dev => dev.Index == deviceChoice);
 
-
+            var processList = Process.GetProcessesByName("osu!");
+            //Console.WriteLine(processList[0]);
+            ushort previousMisscount = 0;
             while (true) {
                 //i didn't want to put this sleep call here, so that a bunch of misses in quick succession could result in a bunch of vibrations
                 // but if i didn't put it here, the misscount would go to 0 like i was being ratelimited or something
-                Thread.Sleep(500);
-                var processList = Process.GetProcessesByName("osu!");
-                //Console.WriteLine(processList[0]);
-                StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
                 if (processList.Length > 0) {
                     //i really wanted to keep this in, but this would just keep printing forever because it's inside the while loop
                     //*might* move it outside so i can still have it print to console
                     //Console.WriteLine("osu's open. good girl :3");
+                    StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
                     var baseAddresses = new OsuBaseAddresses();
                     Program prog = new Program();
                     prog.osuReader.TryRead(baseAddresses);
@@ -130,12 +129,11 @@ internal class Program {
                     prog.osuReader.TryRead(baseAddresses.Skin);
                     prog.osuReader.TryRead(baseAddresses.GeneralData);
                     prog.osuReader.TryRead(baseAddresses.BanchoUser);
-                    if (baseAddresses.GeneralData.OsuStatus == OsuMemoryStatus.Playing) {
+                    //if (baseAddresses.GeneralData.OsuStatus == OsuMemoryStatus.Playing) {
                         prog.osuReader.TryRead(baseAddresses.Player);
                         var misscount = baseAddresses.Player.HitMiss;
-                        ushort previousMisscount = 0;
-                        Console.WriteLine(misscount);
-                        Console.WriteLine(previousMisscount);
+                        //Console.WriteLine(misscount);
+                        //Console.WriteLine(previousMisscount);
                         if (previousMisscount < misscount) {
                             try {
                                 await device.VibrateAsync(0.5);
@@ -145,11 +143,12 @@ internal class Program {
                             catch (Exception e) {
                                 Console.WriteLine($"Problem vibrating: {e}");
                             }
-                            misscount = previousMisscount;
+                            previousMisscount = misscount;
                         }
                         Console.WriteLine(misscount);
                         Console.WriteLine(previousMisscount);
-                    }
+                   // }
+                    
                 }
                 else {
                         try {
@@ -165,6 +164,7 @@ internal class Program {
                             Console.WriteLine($"Problem vibrating: {e}");
                         }
                 }
+                Thread.Sleep(1000);
             }
 
         }
