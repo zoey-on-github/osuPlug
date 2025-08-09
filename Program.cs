@@ -116,13 +116,12 @@ internal class Program {
             var processList = Process.GetProcessesByName("osu!");
             var baseAddresses = new OsuBaseAddresses();
             Program prog = new Program();
+            StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
             while (true)
             {
                 //i didn't want to put this sleep call here, so that a bunch of misses in quick succession could result in a bunch of vibrations
                 // but if i didn't put it here, the misscount would go to 0 like i was being ratelimited or something
-                Thread.Sleep(50);
                 //Console.WriteLine(processList[0]);
-                StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
                 if (processList.Length > 0)
                 {
                     //i really wanted to keep this in, but this would just keep printing forever because it's inside the while loop
@@ -135,17 +134,18 @@ internal class Program {
                     prog.osuReader.TryRead(baseAddresses.BanchoUser);
                     prog.osuReader.TryRead(baseAddresses.Player);
                     misscount = baseAddresses.Player.HitMiss;
-                    Console.WriteLine($"misscount {misscount}");
-                    Console.WriteLine($"previous misscount {previousMisscount}");
 
                     if (misscount < previousMisscount)
                     {
                         // Reset detected (e.g. player retried song)
                         previousMisscount = 0;
+                        Console.WriteLine($"misscount reset {misscount}");
                     }
 
                     if (previousMisscount < misscount)
                     {
+                        Console.WriteLine($"misscount {misscount}");
+                        Console.WriteLine($"previous misscount {previousMisscount}");
                         try
                         {
                             await device.VibrateAsync(0.5);
@@ -158,8 +158,6 @@ internal class Program {
                         }
                         previousMisscount = misscount;
                     }
-                    Console.WriteLine(misscount);
-                    Console.WriteLine(previousMisscount);
                 }
                 else
                 {
