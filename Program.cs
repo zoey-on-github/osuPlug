@@ -145,11 +145,20 @@ internal class Program {
                             }
                             previousMisscount = misscount;
                         }
+                        else if(previousMisscount > misscount ) {
+                            previousMisscount = 0;
+                        }
+
                         Console.WriteLine(misscount);
                         Console.WriteLine(previousMisscount);
-                   // }
-                    
+                    //} 
+                   // if (baseAddresses.GeneralData.OsuStatus == OsuMemoryStatus.SongSelect) {
+                    //    previousMisscount = 0;
+                     //   Console.WriteLine(previousMisscount);
+                   // } 
                 }
+                    
+                
                 else {
                         try {
                             Console.WriteLine("osu is not open. bad girl");
@@ -164,7 +173,6 @@ internal class Program {
                             Console.WriteLine($"Problem vibrating: {e}");
                         }
                 }
-                Thread.Sleep(1000);
             }
 
         }
