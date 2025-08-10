@@ -122,7 +122,7 @@ internal class Program {
                 //i didn't want to put this sleep call here, so that a bunch of misses in quick succession could result in a bunch of vibrations
                 // but if i didn't put it here, the misscount would go to 0 like i was being ratelimited or something
                 //Console.WriteLine(processList[0]);
-                if (processList.Length > 0)
+                if (processList.Length > 0 && !processList[0].HasExited)
                 {
                     //i really wanted to keep this in, but this would just keep printing forever because it's inside the while loop
                     //*might* move it outside so i can still have it print to console
