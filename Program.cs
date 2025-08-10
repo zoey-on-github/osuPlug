@@ -148,7 +148,7 @@ internal class Program {
                         Console.WriteLine($"previous misscount {previousMisscount}");
                         try
                         {
-                            await device.VibrateAsync(0.2);
+                            await device.VibrateAsync(0.5);
                             await Task.Delay(1000);
                             await device.VibrateAsync(0);
                         }
