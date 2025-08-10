@@ -17,7 +17,7 @@ internal class Program {
         }
         Console.ReadKey(true);
     }
-    private readonly StructuredOsuMemoryReader osuReader = new(new ProcessTargetOptions("osu!"));
+    private static readonly StructuredOsuMemoryReader osuReader = new(new ProcessTargetOptions("osu!"));
 
     private static async Task osuPlug() {
         var client = new ButtplugClient("osu!plug");
@@ -115,8 +115,8 @@ internal class Program {
             ushort misscount = 0;
             var processList = Process.GetProcessesByName("osu!");
             var baseAddresses = new OsuBaseAddresses();
-            Program prog = new Program();
             StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
+            var badGirlWarning = false;
             while (true)
             {
                 //i didn't want to put this sleep call here, so that a bunch of misses in quick succession could result in a bunch of vibrations
@@ -127,12 +127,12 @@ internal class Program {
                     //i really wanted to keep this in, but this would just keep printing forever because it's inside the while loop
                     //*might* move it outside so i can still have it print to console
                     //Console.WriteLine("osu's open. good girl :3");
-                    prog.osuReader.TryRead(baseAddresses);
-                    prog.osuReader.TryRead(baseAddresses.Beatmap);
-                    prog.osuReader.TryRead(baseAddresses.Skin);
-                    prog.osuReader.TryRead(baseAddresses.GeneralData);
-                    prog.osuReader.TryRead(baseAddresses.BanchoUser);
-                    prog.osuReader.TryRead(baseAddresses.Player);
+                    osuReader.TryRead(baseAddresses);
+                    osuReader.TryRead(baseAddresses.Beatmap);
+                    osuReader.TryRead(baseAddresses.Skin);
+                    osuReader.TryRead(baseAddresses.GeneralData);
+                    osuReader.TryRead(baseAddresses.BanchoUser);
+                    osuReader.TryRead(baseAddresses.Player);
                     misscount = baseAddresses.Player.HitMiss;
 
                     if (misscount < previousMisscount)
@@ -148,7 +148,7 @@ internal class Program {
                         Console.WriteLine($"previous misscount {previousMisscount}");
                         try
                         {
-                            await device.VibrateAsync(0.5);
+                            await device.VibrateAsync(0.2);
                             await Task.Delay(1000);
                             await device.VibrateAsync(0);
                         }
@@ -163,13 +163,19 @@ internal class Program {
                 {
                     try
                     {
-                        Console.WriteLine("osu is not open. bad girl");
-                        await device.VibrateAsync(0.5);
-                        await Task.Delay(5000);
-                        await device.VibrateAsync(0);
-                        Console.WriteLine("i hope this taught you a lesson >:3");
+                        if (!badGirlWarning)
+                        {
+                            Console.WriteLine("osu is not open. bad girl");
+                            await device.VibrateAsync(0.5);
+                            await Task.Delay(5000);
+                            await device.VibrateAsync(0);
+                            Console.WriteLine("i hope this taught you a lesson >:3");
+                            badGirlWarning = true;
+                        }
+                        processList = Process.GetProcessesByName("osu!");
+                        baseAddresses = new OsuBaseAddresses();
+                        StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
                         //return so we dont vibrate forever
-                        return;
                     }
                     catch (Exception e)
                     {
@@ -181,7 +187,7 @@ internal class Program {
         }
 
         await ControlDevice();
-        }
+    }
     private static void Main() {
         // Setup a client, and wait until everything is done before exiting.
         osuPlug().Wait();
