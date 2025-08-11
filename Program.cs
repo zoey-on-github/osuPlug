@@ -119,9 +119,6 @@ internal class Program {
             var badGirlWarning = false;
             while (true)
             {
-                //i didn't want to put this sleep call here, so that a bunch of misses in quick succession could result in a bunch of vibrations
-                // but if i didn't put it here, the misscount would go to 0 like i was being ratelimited or something
-                //Console.WriteLine(processList[0]);
                 if (processList.Length > 0 && !processList[0].HasExited)
                 {
                     //i really wanted to keep this in, but this would just keep printing forever because it's inside the while loop
@@ -175,7 +172,6 @@ internal class Program {
                         processList = Process.GetProcessesByName("osu!");
                         baseAddresses = new OsuBaseAddresses();
                         StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
-                        //return so we dont vibrate forever
                     }
                     catch (Exception e)
                     {
