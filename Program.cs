@@ -82,6 +82,7 @@ internal class Program {
                 {
                     break;
                 }
+                await Task.Delay(10);
             }
 
             var options = new List<uint>();
@@ -106,6 +107,7 @@ internal class Program {
                     Console.WriteLine($"Device {selectedDevice.Name} selected");
                     break;
                 }
+                await Task.Delay(10);
             }
 
 
@@ -178,6 +180,7 @@ internal class Program {
                         Console.WriteLine($"Problem vibrating: {e}");
                     }
                 }
+                await Task.Delay(10);
             }
 
         }
