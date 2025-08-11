@@ -17,7 +17,7 @@ internal class Program {
         }
         Console.ReadKey(true);
     }
-    private readonly StructuredOsuMemoryReader osuReader = new(new ProcessTargetOptions("osu!"));
+    private static readonly StructuredOsuMemoryReader osuReader = new(new ProcessTargetOptions("osu!"));
 
     private static async Task osuPlug() {
         var client = new ButtplugClient("osu!plug");
@@ -111,66 +111,79 @@ internal class Program {
 
             var device = client.Devices.First(dev => dev.Index == deviceChoice);
 
-
-            while (true) {
-                //i didn't want to put this sleep call here, so that a bunch of misses in quick succession could result in a bunch of vibrations
-                // but if i didn't put it here, the misscount would go to 0 like i was being ratelimited or something
-                Thread.Sleep(50);
-                var processList = Process.GetProcessesByName("osu!");
-                //Console.WriteLine(processList[0]);
-                StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
-                if (processList.Length > 0) {
+            ushort previousMisscount = 0;
+            ushort misscount = 0;
+            var processList = Process.GetProcessesByName("osu!");
+            var baseAddresses = new OsuBaseAddresses();
+            StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
+            var badGirlWarning = false;
+            while (true)
+            {
+                if (processList.Length > 0 && !processList[0].HasExited)
+                {
                     //i really wanted to keep this in, but this would just keep printing forever because it's inside the while loop
                     //*might* move it outside so i can still have it print to console
                     //Console.WriteLine("osu's open. good girl :3");
-                    var baseAddresses = new OsuBaseAddresses();
-                    Program prog = new Program();
-                    prog.osuReader.TryRead(baseAddresses);
-                    prog.osuReader.TryRead(baseAddresses.Beatmap);
-                    prog.osuReader.TryRead(baseAddresses.Skin);
-                    prog.osuReader.TryRead(baseAddresses.GeneralData);
-                    prog.osuReader.TryRead(baseAddresses.BanchoUser);
-                    prog.osuReader.TryRead(baseAddresses.Player);
-                    var misscount = baseAddresses.Player.HitMiss;
-                    ushort previousMisscount = 0;
-                    Console.WriteLine(misscount);
-                    Console.WriteLine(previousMisscount);
+                    osuReader.TryRead(baseAddresses);
+                    osuReader.TryRead(baseAddresses.Beatmap);
+                    osuReader.TryRead(baseAddresses.Skin);
+                    osuReader.TryRead(baseAddresses.GeneralData);
+                    osuReader.TryRead(baseAddresses.BanchoUser);
+                    osuReader.TryRead(baseAddresses.Player);
+                    misscount = baseAddresses.Player.HitMiss;
 
+                    if (misscount < previousMisscount)
+                    {
+                        // Reset detected (e.g. player retried song)
+                        previousMisscount = 0;
+                        Console.WriteLine($"misscount reset {misscount}");
+                    }
 
-                    if (previousMisscount < misscount) {
-                        try {
+                    if (previousMisscount < misscount)
+                    {
+                        Console.WriteLine($"misscount {misscount}");
+                        Console.WriteLine($"previous misscount {previousMisscount}");
+                        try
+                        {
                             await device.VibrateAsync(0.5);
                             await Task.Delay(1000);
                             await device.VibrateAsync(0);
                         }
-                        catch (Exception e) {
+                        catch (Exception e)
+                        {
                             Console.WriteLine($"Problem vibrating: {e}");
                         }
-                        misscount = previousMisscount;
+                        previousMisscount = misscount;
                     }
-                    Console.WriteLine(misscount);
-                    Console.WriteLine(previousMisscount);
-                } 
-                else {
-                        try {
+                }
+                else
+                {
+                    try
+                    {
+                        if (!badGirlWarning)
+                        {
                             Console.WriteLine("osu is not open. bad girl");
                             await device.VibrateAsync(0.5);
                             await Task.Delay(5000);
                             await device.VibrateAsync(0);
                             Console.WriteLine("i hope this taught you a lesson >:3");
-                            //return so we dont vibrate forever
-                            return;
+                            badGirlWarning = true;
                         }
-                        catch (Exception e) {
-                            Console.WriteLine($"Problem vibrating: {e}");
-                        }
+                        processList = Process.GetProcessesByName("osu!");
+                        baseAddresses = new OsuBaseAddresses();
+                        StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Problem vibrating: {e}");
+                    }
                 }
             }
 
         }
 
         await ControlDevice();
-        }
+    }
     private static void Main() {
         // Setup a client, and wait until everything is done before exiting.
         osuPlug().Wait();
