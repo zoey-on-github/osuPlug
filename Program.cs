@@ -43,7 +43,6 @@ internal class Program {
         await client.ConnectAsync(new ButtplugWebsocketConnector(new Uri("ws://127.0.0.1:12345")));
 
 
-
         // Here's the scanning part. Pretty simple, just scan until the user
         // hits a button. Any time a new device is found, print it so the
         // user knows we found it.
@@ -70,16 +69,12 @@ internal class Program {
             // (which is why we can't just use an array index).
 
             // Of course, if we don't have any devices yet, that's not gonna work.
-            while (true)
-            {
-                if (!client.Devices.Any())
-                {
+            while (true) {
+                if (!client.Devices.Any()) {
                     // Scan for devices before we get to the main menu.
                     await ScanForDevices();
                     Console.WriteLine("No devices available. Please scan for a device.");
-                }
-                else
-                {
+                } else {
                     break;
                 }
                 await Task.Delay(10);
@@ -93,18 +88,15 @@ internal class Program {
 
             Console.WriteLine("Choose a device: ");
             uint deviceChoice;
-            while (true)
-            {
+            while (true) {
                 var userinput = Console.ReadLine();
                 var validchoice = uint.TryParse(userinput, out deviceChoice);
-                if (!validchoice || !options.Contains(deviceChoice))
-                {
+                if (!validchoice || !options.Contains(deviceChoice)) {
                     Console.WriteLine("Invalid choice, Try again:");
-                }
-                else
-                {
+                } else {
                     var selectedDevice = client.Devices.First(d => d.Index == deviceChoice);
                     Console.WriteLine($"Device {selectedDevice.Name} selected");
+
                     break;
                 }
                 await Task.Delay(10);
@@ -115,14 +107,17 @@ internal class Program {
 
             ushort previousMisscount = 0;
             ushort misscount = 0;
+            ushort maxCombo = 0;
+            ushort previousCombo = 0;
+            ushort Combo = 0;
+            ushort sliderBreak = 0;
+            ushort previousSB = 0;
             var processList = Process.GetProcessesByName("osu!");
             var baseAddresses = new OsuBaseAddresses();
             StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
             var badGirlWarning = false;
-            while (true)
-            {
-                if (processList.Length > 0 && !processList[0].HasExited)
-                {
+            while (true) {
+                if (processList.Length > 0 && !processList[0].HasExited) {
                     //i really wanted to keep this in, but this would just keep printing forever because it's inside the while loop
                     //*might* move it outside so i can still have it print to console
                     //Console.WriteLine("osu's open. good girl :3");
@@ -133,37 +128,67 @@ internal class Program {
                     osuReader.TryRead(baseAddresses.BanchoUser);
                     osuReader.TryRead(baseAddresses.Player);
                     misscount = baseAddresses.Player.HitMiss;
+                    Combo = baseAddresses.Player.Combo;
+                    maxCombo = baseAddresses.Player.MaxCombo;
 
-                    if (misscount < previousMisscount)
-                    {
+                    if (misscount < previousMisscount) {
                         // Reset detected (e.g. player retried song)
                         previousMisscount = 0;
                         Console.WriteLine($"misscount reset {misscount}");
                     }
 
-                    if (previousMisscount < misscount)
-                    {
+                    if (previousMisscount < misscount) {
                         Console.WriteLine($"misscount {misscount}");
                         Console.WriteLine($"previous misscount {previousMisscount}");
-                        try
-                        {
+                        try {
                             await device.VibrateAsync(0.5);
                             await Task.Delay(1000);
                             await device.VibrateAsync(0);
                         }
-                        catch (Exception e)
-                        {
+                        catch (Exception e) {
                             Console.WriteLine($"Problem vibrating: {e}");
                         }
                         previousMisscount = misscount;
                     }
-                }
-                else
-                {
-                    try
-                    {
-                        if (!badGirlWarning)
-                        {
+                    if (previousCombo < Combo) {
+                        previousCombo = Combo;
+                    }
+                    if (previousCombo > maxCombo) {
+                        previousCombo = 0;
+                    }
+                    if (previousCombo > Combo && misscount == previousMisscount) {
+                        previousCombo = Combo;
+                        sliderBreak += 1;
+                        Console.WriteLine($"sliderbreak count:{sliderBreak}");
+                    }
+                    if (previousSB < sliderBreak) {
+                        try {
+                            await device.VibrateAsync(0.5);
+                            await Task.Delay(1000);
+                            await device.VibrateAsync(0);
+                        }
+                        catch (Exception e) {
+                            Console.WriteLine($"Problem vibrating: {e}");
+                        }
+                        previousSB = sliderBreak;
+                    }
+                    if (sliderBreak < previousSB) {
+                        previousSB = 0;
+                    } 
+                    //128 is the number for relax 
+                    /*
+                     if (baseAddresses.GeneralData.Mods.Equals(128) && baseAddresses.GeneralData.OsuStatus == OsuMemoryStatus.Playing ) {
+                         Console.WriteLine("someone's scared :3");
+                     }
+                     */
+                    
+                    // if (baseAddresses.GeneralData.Mods.Equals(1) && baseAddresses.GeneralData.OsuStatus == OsuMemoryStatus.Playing) {
+                    //     Console.WriteLine("nice try :3");
+                    //     
+                    // }
+                } else {
+                    try {
+                        if (!badGirlWarning) {
                             Console.WriteLine("osu is not open. bad girl");
                             await device.VibrateAsync(0.5);
                             await Task.Delay(5000);
@@ -175,8 +200,7 @@ internal class Program {
                         baseAddresses = new OsuBaseAddresses();
                         StructuredOsuMemoryReader.GetInstance(new ProcessTargetOptions("osu!"));
                     }
-                    catch (Exception e)
-                    {
+                    catch (Exception e) {
                         Console.WriteLine($"Problem vibrating: {e}");
                     }
                 }
