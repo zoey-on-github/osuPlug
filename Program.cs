@@ -182,10 +182,17 @@ internal class Program {
                      }
                      */
                     
-                    // if (baseAddresses.GeneralData.Mods.Equals(1) && baseAddresses.GeneralData.OsuStatus == OsuMemoryStatus.Playing) {
-                    //     Console.WriteLine("nice try :3");
-                    //     
-                    // }
+                     if (baseAddresses.GeneralData.Mods.Equals(2048) && baseAddresses.GeneralData.OsuStatus == OsuMemoryStatus.Playing) {
+                             try {
+                                 await device.VibrateAsync(0.5);
+                                 await Task.Delay(1000);
+                                 await device.VibrateAsync(0);
+                             }
+                             catch (Exception e) {
+                                 Console.WriteLine($"Problem vibrating: {e}");
+                             } 
+                             await Task.Delay(100);
+                     }
                 } else {
                     try {
                         if (!badGirlWarning) {
