@@ -12,3 +12,6 @@ buttplug.io support for [osu!](https://osu.ppy.sh)
 
 ## why?
 why not :3
+
+## ui test
+<img width="678" height="588" alt="Screenshot 2025-08-14 203509" src="https://github.com/user-attachments/assets/97f0ad43-834a-4cfd-973a-fc2a48e390d3" />
